@@ -1,8 +1,3 @@
-# Tetromino (a Tetris clone)
-# By Al Sweigart al@inventwithpython.com
-# http://inventwithpython.com/pygame
-# Released under a "Simplified BSD" license
-
 import random, time, pygame, sys
 from pygame.locals import *
 
@@ -37,12 +32,87 @@ BORDERCOLOR = BLUE
 BGCOLOR = BLACK
 TEXTCOLOR = WHITE
 TEXTSHADOWCOLOR = GRAY
-COLORS      = (     BLUE,      GREEN,      RED,      YELLOW)
-LIGHTCOLORS = (LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW)
+COLORS      = (     BLUE,      GREEN,      RED,      YELLOW,  GRAY)
+LIGHTCOLORS = (LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW,  BLACK)
 assert len(COLORS) == len(LIGHTCOLORS) # each color must have light color
 
 TEMPLATEWIDTH = 5
 TEMPLATEHEIGHT = 5
+
+Mi_SHAPE_TEMPLATE = [['.....',
+                      '.....',
+                      '.....',
+                      '.OO..',
+                      '.....'],
+                     ['.....',
+                      '..O..',
+                      '..O..',
+                      '.....',
+                      '.....']]
+
+i_SHAPE_TEMPLATE = [['.....',
+                     '..O..',
+                     '..O..',
+                     '..O..',
+                     '.....'],
+                    ['.....',
+                     '.....',
+                     '.OOO.',
+                     '.....',
+                     '.....']]
+
+BO_SHAPE_TEMPLATE = [['.....',
+                      '.O.O.',
+                      '..O..',
+                      '.....',
+                      '.....'],
+                     ['.....',
+                      '..O..',
+                      '.O...',
+                      '..O..',
+                      '.....']]
+
+FO_SHAPE_TEMPLATE = [['.....',
+                      '.O...',
+                      '..O..',
+                      '.....',
+                      '.....'],
+                     ['.....',
+                      '.O...',
+                      'O.O..',
+                      '.....',
+                      '.....'],
+                     ['.....',
+                      '.....',
+                      'O.O..',
+                      '.O...',
+                      '.....'],
+                     ['.....',
+                      '.....',
+                      'O.O.O',
+                      '.....',
+                      '.....'],
+                     ['.O...',
+                      '.O...',
+                      'O.O..',
+                      '.O...',
+                      '.O...'],
+                     ['.....',
+                      '.....',
+                      'O.O.O.',
+                      '.....',
+                      '.....']]
+
+I_SHAPE_TEMPLATE =  [['.....',
+                      '.....',
+                      'OOOOO',
+                      '.....',
+                      '.....'],
+                     ['..O..',
+                      '..O..',
+                      '..O..',
+                      '..O..',
+                      '..O..']]
 
 S_SHAPE_TEMPLATE = [['.....',
                      '.....',
@@ -67,16 +137,16 @@ Z_SHAPE_TEMPLATE = [['.....',
                      '.....']]
 
 BLOCK_SHAPE_TEMPLATE = [['OOOOO',
-                     'OOOOO',
-                     'OOOOO',
-                     'OOOOO',
-                     'OOOOO']]
+                         'OOOOO',
+                         'OOOOO',
+                         'OOOOO',
+                         'OOOOO']]
 
-FUK_SHAPE_TEMPLATE = [['OO.OO',
-                     'O.O.O',
-                     '.O.O.',
-                     'O.O.O',
-                     'OO.OO']]
+FU_SHAPE_TEMPLATE = [['OO.OO',
+                       'O.O.O',
+                       '.O.O.',
+                       'O.O.O',
+                       'OO.OO']]
 
 O_SHAPE_TEMPLATE = [['.....',
                      '.....',
@@ -159,20 +229,42 @@ T_SHAPE_TEMPLATE = [['.....',
                      '..O..',
                      '.....']]
 
-PIECES = {'S': S_SHAPE_TEMPLATE,
-          'Z': Z_SHAPE_TEMPLATE,
-          'J': J_SHAPE_TEMPLATE,
-          'L': L_SHAPE_TEMPLATE,
-          'O': O_SHAPE_TEMPLATE,
-          'D': D_SHAPE_TEMPLATE,
-          'T': T_SHAPE_TEMPLATE,
-          'P': P_SHAPE_TEMPLATE,
-          'BLK': BLOCK_SHAPE_TEMPLATE,
-          'FUK': FUK_SHAPE_TEMPLATE}
+NORMAL_PIECES = {'S': S_SHAPE_TEMPLATE,
+                 'Z': Z_SHAPE_TEMPLATE,
+                 'J': J_SHAPE_TEMPLATE,
+                 'L': L_SHAPE_TEMPLATE,
+                 'O': O_SHAPE_TEMPLATE,
+                 'T': T_SHAPE_TEMPLATE}
+
+SUPER_PIECES ={'B'  : BLOCK_SHAPE_TEMPLATE,
+               'FU' : FU_SHAPE_TEMPLATE,
+               'D'  : D_SHAPE_TEMPLATE,
+               'I'  : I_SHAPE_TEMPLATE,
+               'i'  : i_SHAPE_TEMPLATE,
+               'Mi' : Mi_SHAPE_TEMPLATE,
+               'P'  : P_SHAPE_TEMPLATE,
+               'FO' : FO_SHAPE_TEMPLATE}
+
+PIECES = {'S'  : S_SHAPE_TEMPLATE,
+          'Z'  : Z_SHAPE_TEMPLATE,
+          'J'  : J_SHAPE_TEMPLATE,
+          'L'  : L_SHAPE_TEMPLATE,
+          'O'  : O_SHAPE_TEMPLATE,
+          'T'  : T_SHAPE_TEMPLATE,
+          'B'  : BLOCK_SHAPE_TEMPLATE,
+          'FU' : FU_SHAPE_TEMPLATE,
+          'D'  : D_SHAPE_TEMPLATE,
+          'I'  : I_SHAPE_TEMPLATE,
+          'i'  : i_SHAPE_TEMPLATE,
+          'Mi' : Mi_SHAPE_TEMPLATE,
+          'P'  : P_SHAPE_TEMPLATE,
+          'FO' : FO_SHAPE_TEMPLATE}
 
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
+    global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, POS, RECENT
+    RECENT = []
+    POS = 0
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
@@ -180,7 +272,7 @@ def main():
     BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
     pygame.display.set_caption('Tetromino')
 
-    showTextScreen('Tetromino')
+    showTextScreen('MIRROR TETRIS')
     while True: # game loop
         if random.randint(0, 1) == 0:
             pygame.mixer.music.load('tetrisb.mid')
@@ -378,7 +470,7 @@ def calculateLevelAndFallFreq(score):
 
 def getNewPiece():
     # return a random new piece in a random rotation and color
-    shape = random.choice(list(PIECES.keys()))
+    shape = getPiece()
     newPiece = {'shape': shape,
                 'rotation': random.randint(0, len(PIECES[shape]) - 1),
                 'x': int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2),
@@ -386,12 +478,41 @@ def getNewPiece():
                 'color': random.randint(0, len(COLORS)-1)}
     return newPiece
 
+def PieceSelection():
+        pieceSelect=random.randint(1,50)
+        if pieceSelect<=10:
+            pieceName=random.choice(list(SUPER_PIECES))
+            Template=SUPER_PIECES[pieceName]
+        else:
+            pieceName=random.choice(list(NORMAL_PIECES))
+            Template=NORMAL_PIECES[pieceName]
+        return pieceName, Template
+    
+def checkPiece(pieceName):
+        if pieceName in RECENT:
+            return True
+        else:
+            if len(RECENT)<3:
+                RECENT.append(pieceName)
+            else:
+                RECENT.pop(0)
+                RECENT.append(pieceName)
+            return False
 
+def getPiece():
+        pieceList=PieceSelection()
+        while checkPiece(pieceList[0]):
+            pieceList=PieceSelection()
+            piece=pieceList[0]
+        return pieceList[0]
+
+        
 def addToBoard(board, piece):
     # fill in the board based on piece's location, shape, and rotation
     for x in range(TEMPLATEWIDTH):
         for y in range(TEMPLATEHEIGHT):
             if PIECES[piece['shape']][piece['rotation']][y][x] != BLANK:
+                print(PIECES[piece['shape']][piece['rotation']][y][x])
                 board[x + piece['x']][y + piece['y']] = piece['color']
 
 

@@ -205,6 +205,8 @@ def runGame():
     movingRight = False
     score = 0
     colorChange = 0
+    helpCount = 0
+    helpInfo = 3
     level, fallFreq = calculateLevelAndFallFreq(score)
 
     fallingPiece = getNewPiece()
@@ -279,6 +281,8 @@ def runGame():
                         if not isValidPosition(board, fallingPiece, adjY=i):
                             break
                     fallingPiece['y'] += i - 1
+                elif event.key == ord('h'):
+                    helpCount = helpCount + 1
 
         # handle moving the piece because of user input
         if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > MOVESIDEWAYSFREQ:
@@ -301,6 +305,21 @@ def runGame():
                 score += removeCompleteLines(board)
                 level, fallFreq = calculateLevelAndFallFreq(score)
                 fallingPiece = None
+            elif helpCount == 1:
+                score += removeAll_Lines(board)- 190
+                fallingPiece = None
+                helpCount = helpCount + 1
+                helpInfo = helpInfo - 1
+            elif helpCount == 3:
+                score += removeAll_Lines(board)- 190
+                fallingPiece = None
+                helpCount = helpCount + 1
+                helpInfo = helpInfo - 1
+            elif helpCount == 5:
+                score += removeAll_Lines(board)- 190
+                fallingPiece = None
+                helpCount = helpCount + 1
+                helpInfo = helpInfo - 1
             else:
                 # piece did not land, just move the piece down
                 fallingPiece['y'] += 1
@@ -330,7 +349,7 @@ def runGame():
             DISPLAYSURF.fill(BGCOLOR)
         
         drawBoard(board)
-        drawStatus(score, level)
+        drawStatus(score, level, helpInfo)
         drawNextPiece(nextPiece)
         if fallingPiece != None:
             drawPiece(fallingPiece)
@@ -484,15 +503,10 @@ def removeAll_Lines(board):
     while y >= 0:
         for pullDownY in range(y, 0, -1):
             for x in range(BOARDWIDTH):
-                    board[x][pullDownY] = board[x][pullDownY-6]
+                    board[x][pullDownY] = board[x][pullDownY-10]
             # Set very top line to blank.
             for x in range(BOARDWIDTH):
-                board[x][0] = BLANK
-                board[x][1] = BLANK
-                board[x][2] = BLANK
-                board[x][3] = BLANK
-                board[x][4] = BLANK
-                board[x][5] = BLANK
+                board[x][y] = BLANK
             numLinesRemoved += 1
             # Note on the next iteration of the loop, y is the same.
             # This is so that if the line that was pulled down is also
@@ -531,7 +545,7 @@ def drawBoard(board):
             drawBox(x, y, board[x][y])
 
 
-def drawStatus(score, level):
+def drawStatus(score, level, helpInfo):
     # draw the score text
     scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
     scoreRect = scoreSurf.get_rect()
@@ -544,6 +558,17 @@ def drawStatus(score, level):
     levelRect.topleft = (WINDOWWIDTH - 150, 50)
     DISPLAYSURF.blit(levelSurf, levelRect)
 
+    # draw the help text
+    helpSurf = BASICFONT.render('Possible # of Clear: %s' % helpInfo, True, TEXTCOLOR)
+    helpRect = helpSurf.get_rect()
+    helpRect.topleft = (WINDOWWIDTH - 620, 40)
+    DISPLAYSURF.blit(helpSurf, helpRect)
+
+    # draw help help instruction
+    instructionSurf = BASICFONT.render('Press h to clear the board', True, TEXTCOLOR)
+    instructionRect = instructionSurf.get_rect()
+    instructionRect.topleft = (WINDOWWIDTH - 620, 20)
+    DISPLAYSURF.blit(instructionSurf, instructionRect)
 
 def drawPiece(piece, pixelx=None, pixely=None):
     shapeToDraw = PIECES[piece['shape']][piece['rotation']]
